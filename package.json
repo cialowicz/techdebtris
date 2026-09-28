@@ -1,0 +1,12 @@
+{
+  "name": "techdebtris",
+  "version": "1.0.0",
+  "description": "Tetris, but every piece is a shortcut and every line cleared pays down tech debt.",
+  "private": true,
+  "scripts": {
+    "test": "node --test \"tests/*.test.mjs\""
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
