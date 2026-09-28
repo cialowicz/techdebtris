@@ -62,10 +62,11 @@ There are ~575 messages, split into pools:
 | `pause`    | The game is paused        | 10    |
 | `gameOver` | You top out               | 20    |
 
-Debt-taken messages pop up on the board in rows the action isn't using. They stay clear of the
-falling piece, every row it could land in, and any line-clear message, then drop into the ticker
-below the board. If the action moves toward a message, it fades out of the way. When the board
-has no room, the message pops up in the ticker area instead.
+Every debt-taken message goes to the commit log and the ticker below the board. When a piece buries
+an empty gap beneath it, the message also pops up on the board in rows the action isn't using. It
+stays clear of the falling piece, every row it could land in, and any line-clear message, then drops
+into the ticker below the board. If the action moves toward a message, it fades out of the way. When
+the board has no room, the message pops up in the ticker area instead.
 
 Each pool is dealt from a shuffled "bag", so every message in a pool is shown once before any repeats,
 and the same message never appears twice in a row.

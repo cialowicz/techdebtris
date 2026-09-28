@@ -250,6 +250,32 @@ describe('line clears and scoring', () => {
     assert.deepEqual(locks(events).map((e) => e.cleared), [0, 0]);
   });
 
+  test('a piece landing flat on the floor covers no gaps', () => {
+    const { game, events } = newGame();
+    placeAtColumn(game, 'T', 0, 4);
+    game.hardDrop();
+    placeAtColumn(game, 'O', 0, 0);
+    game.hardDrop();
+    assert.deepEqual(locks(events).map((e) => e.gapsCovered), [0, 0]);
+  });
+
+  test('a piece that overhangs empty cells reports each column it covers', () => {
+    const { game, events } = newGame();
+    placeAtColumn(game, 'T', 2, 4); // pointing down: both arms hang over empty floor
+    game.hardDrop();
+    assert.equal(locks(events).at(-1).gapsCovered, 2);
+  });
+
+  test('bridging an open well covers it; filling the well does not', () => {
+    const { game, events } = newGame();
+    fillRow(game, BOTTOM, [0, 4, 5]);
+    placeAtColumn(game, 'I', 1, 0); // vertical I drops into the well at column 0
+    game.hardDrop();
+    placeAtColumn(game, 'I', 0, 3); // flat I spans the two-wide gap at columns 4-5
+    game.hardDrop();
+    assert.deepEqual(locks(events).map((e) => e.gapsCovered), [0, 2]);
+  });
+
   test('every 10 lines raises the level, which multiplies line scores', () => {
     const { game, events } = newGame();
     game.lines = 9;

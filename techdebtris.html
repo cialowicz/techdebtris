@@ -1286,6 +1286,12 @@ You've reached the "we should just start over" stage. Everyone does, eventually.
       g.piecesPlaced++;
       g.canHold = true;
 
+      // Columns where the piece's lowest cell now roofs over an empty cell: a gap buried under debt.
+      const lowest = new Map();
+      for (const [x, y] of placed) lowest.set(x, Math.max(y, lowest.get(x) ?? -Infinity));
+      let gapsCovered = 0;
+      for (const [x, y] of lowest) if (y + 1 < TOTAL_ROWS && g.board[y + 1][x] === null) gapsCovered++;
+
       const rows = [];
       g.board.forEach((row, y) => { if (row.every((c) => c !== null)) rows.push(y); });
       const cleared = rows.length;
@@ -1308,7 +1314,7 @@ You've reached the "we should just start over" stage. Everyone does, eventually.
         g.debtTaken++;
       }
 
-      emit({ type: 'lock', piece: piece.type, cells: placed, cleared, rows, points });
+      emit({ type: 'lock', piece: piece.type, cells: placed, cleared, rows, points, gapsCovered });
       if (g.level > levelBefore) emit({ type: 'levelUp', level: g.level });
 
       if (lockedOut) gameOver();
@@ -1708,7 +1714,8 @@ You've reached the "we should just start over" stage. Everyone does, eventually.
         break;
       case 'lock': {
         if (e.cleared === 0) {
-          announce('debt', '+debt', messenger.next('placed'), true);
+          // Every placement is logged; only burying a gap earns the pop-up on the board.
+          announce('debt', '+debt', messenger.next('placed'), e.gapsCovered > 0);
           break;
         }
         const text = messenger.next(CLEAR_POOLS[e.cleared]);
