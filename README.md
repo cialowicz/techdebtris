@@ -2,6 +2,8 @@
 
 Tetris, but every piece you place is a shortcut and every line you clear pays some of it back.
 
+**[▶ Play it in your browser](https://cialowicz.github.io/techdebtris/)**
+
 It's a single, self-contained HTML file with no dependencies, no build step, and no network requests.
 Open `techdebtris.html` in any modern browser and start your first sprint.
 
