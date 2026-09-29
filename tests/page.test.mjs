@@ -36,3 +36,13 @@ test('messages live in the ticker and never cover the board', () => {
   assert.doesNotMatch(ui, /\b(?:boardCol|boardWrap)\.(?:append|prepend|appendChild)\(/);
   assert.match(html, /\.ticker\.highlight\b/);
 });
+
+test('iOS double-tap on the play area cannot zoom, and a stray zoom can be pinched back', () => {
+  const ui = scriptById('techdebtris-ui');
+  // Safari still double-tap-zooms through touch-action: none; a non-passive touchend that
+  // calls preventDefault is what actually stops it.
+  assert.match(ui, /els\.layout\.addEventListener\('touchend',[\s\S]*?preventDefault\(\)[\s\S]*?\{ passive: false \}\)/);
+  // Between games the play area allows pinch, so the page is never stuck zoomed in.
+  assert.match(ui, /els\.layout\.classList\.toggle\('idle'/);
+  assert.match(html, /\.layout\.idle\s*\{[^}]*touch-action:\s*pan-y pinch-zoom/);
+});

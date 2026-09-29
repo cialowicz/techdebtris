@@ -247,7 +247,9 @@
   @media (pointer: coarse) {
     /* Swipes drive the game, so the page itself must not scroll, zoom, or select text. */
     .layout { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
-    .overlay { touch-action: pan-y; }
+    .overlay { touch-action: pan-y pinch-zoom; }
+    /* Between games, let a pinch undo any zoom that slipped through. */
+    .layout.idle { touch-action: pan-y pinch-zoom; }
     .hold-panel { cursor: pointer; }
     :root.buttons { --controls-h: 76px; } /* on :root, where --board-h is computed */
     .buttons .touch {
@@ -1838,6 +1840,7 @@ Deployed on a Friday. It was fine. Don't make this a habit.
 
   function showOverlay(which) {
     els.overlay.hidden = !which;
+    els.layout.classList.toggle('idle', Boolean(which));
     for (const [name, pane] of Object.entries(els.panes)) pane.hidden = name !== which;
   }
 
@@ -2048,6 +2051,13 @@ Deployed on a Friday. It was fine. Don't make this a habit.
   }
   els.layout.addEventListener('pointerup', liftFinger);
   els.layout.addEventListener('pointercancel', liftFinger);
+
+  // iOS Safari still treats two quick taps as a double-tap zoom despite touch-action: none,
+  // and the play area blocks the pinch that would undo it. Cancelling touchend stops the
+  // zoom; buttons are skipped so their clicks still fire.
+  els.layout.addEventListener('touchend', (e) => {
+    if (!e.target.closest('button')) e.preventDefault();
+  }, { passive: false });
 
   els.holdPanel.addEventListener('pointerdown', (e) => {
     if (!playing()) return;
