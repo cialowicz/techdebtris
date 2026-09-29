@@ -477,6 +477,30 @@ describe('interest', () => {
     assert.equal(game.interest, 4);
   });
 
+  test('fixing every buried gap wipes out the accrued interest', () => {
+    const { game } = newGame();
+    fillRow(game, BOTTOM, [0]); // one buried gap at column 0...
+    fillRow(game, BOTTOM - 1, [8, 9]); // ...under this row, which the O will clear
+    game.gaps = 1;
+    game.interest = 10;
+    placeAtColumn(game, 'O', 0, 8);
+    game.hardDrop();
+    assert.equal(game.gaps, 0);
+    assert.equal(game.interest, 0);
+  });
+
+  test('fixing only some buried gaps keeps the interest accruing', () => {
+    const { game } = newGame();
+    fillRow(game, BOTTOM, [0, 5]);
+    fillRow(game, BOTTOM - 1, [8, 9]);
+    game.board[BOTTOM - 2][5] = 'X'; // still roofs over column 5 after the clear
+    game.interest = 10;
+    placeAtColumn(game, 'O', 0, 8);
+    game.hardDrop();
+    assert.equal(game.gaps, 1);
+    assert.equal(game.interest, 11);
+  });
+
   test('when interest comes due, a legacy row with one gap rises from the bottom', () => {
     const { game, events } = newGame();
     placeAtColumn(game, 'T', 2, 4);

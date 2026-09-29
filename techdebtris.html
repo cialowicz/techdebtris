@@ -1506,10 +1506,11 @@ Deployed on a Friday. It was fine. Don't make this a habit.
       else spawn(g.queue.shift());
     }
 
-    // Buried gaps charge interest on every lock. When it comes due, a row of legacy code
-    // (with one gap) rises from the bottom. Returns true if that pushed the stack out the top.
+    // Buried gaps charge interest on every lock; fixing all of them pays the balance off.
+    // When it comes due, a row of legacy code (with one gap) rises from the bottom.
+    // Returns true if that pushed the stack out the top.
     function accrueInterest() {
-      g.interest += g.gaps;
+      g.interest = g.gaps ? g.interest + g.gaps : 0;
       if (g.interest < INTEREST_DUE) return false;
       g.interest = 0;
       const toppedOut = g.board[0].some((c) => c !== null);

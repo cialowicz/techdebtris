@@ -29,9 +29,9 @@ S **Spaghetti Code**, Z a **Zombie Service**, J the **Jira Backlog**, and L **Ve
 ### Interest, refactors, and hotfixes
 
 - **Interest.** A buried gap is an empty cell with something above it. After every piece locks, each
-  buried gap on the board adds a point of interest. At 30 points, interest comes due: a row of
-  legacy code (with one gap) rises from the bottom and pushes the stack up. The Interest panel
-  shows how many pieces you have left.
+  buried gap on the board adds a point of interest; fix every buried gap and the balance resets to
+  zero. At 30 points, interest comes due: a row of legacy code (with one gap) rises from the bottom
+  and pushes the stack up. The Interest panel shows how many pieces you have left.
 - **Refactor.** Whenever a piece leaves fewer buried gaps than before, by clearing the rows above
   them or by tucking a piece in, you earn 50 points per gap fixed × the current sprint. A refactor
   doesn't count as debt taken.
