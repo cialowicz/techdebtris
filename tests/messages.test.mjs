@@ -18,6 +18,9 @@ const MINIMUMS = {
   levelUp: 20,
   pause: 8,
   gameOver: 15,
+  refactor: 20,
+  interest: 15,
+  hotfix: 12,
 };
 const MAX_LENGTH = 140;
 

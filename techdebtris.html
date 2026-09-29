@@ -24,6 +24,7 @@
     --level: #d29922;
     --hold: #a371f7;
     --init: #58a6ff;
+    --hotfix: #f778ba;
     --well: #0a0d12;
     --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
     --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -92,7 +93,8 @@
 
   .meter { height: 10px; border-radius: 5px; background: var(--panel-2); border: 1px solid var(--border); overflow: hidden; }
   #meter-fill { height: 100%; width: 0; background: var(--paid); transition: width 0.25s, background-color 0.25s; }
-  #meter-label { margin-top: 6px; font: 12px var(--mono); color: var(--muted); }
+  #meter-label, #interest-label { margin-top: 6px; font: 12px var(--mono); color: var(--muted); }
+  #interest-fill { height: 100%; width: 0; background: var(--level); transition: width 0.25s, background-color 0.25s; }
 
   .board-wrap {
     position: relative; height: var(--board-h); width: 100%;
@@ -103,6 +105,13 @@
   .board-wrap.celebrate { animation: celebrate 0.9s ease-out; }
   @keyframes celebrate {
     30% { border-color: var(--paid); box-shadow: 0 0 44px rgba(63, 185, 80, 0.8); }
+  }
+  .board-wrap.shake { animation: shake 0.45s ease-out; }
+  @keyframes shake {
+    20% { transform: translateX(-5px); border-color: var(--debt); }
+    40% { transform: translateX(4px); }
+    60% { transform: translateX(-3px); }
+    80% { transform: translateX(2px); }
   }
   #board { display: block; width: 100%; height: 100%; }
 
@@ -117,6 +126,7 @@
   .tag.level { color: var(--level); }
   .tag.hold { color: var(--hold); }
   .tag.init { color: var(--init); }
+  .tag.hotfix { color: var(--hotfix); }
   .tag.fatal { color: var(--bg); background: var(--debt); border-color: var(--debt); }
 
   .log { position: absolute; inset: 34px 4px 8px 12px; margin: 0; padding: 0 8px 0 0; list-style: none; overflow-y: auto; font-size: 12.5px; }
@@ -145,6 +155,10 @@
   .toast.tetris .title { font-size: 19px; }
   .toast.level { border-color: var(--level); }
   .toast.level .title { color: var(--level); }
+  .toast.interest { border-color: var(--debt); }
+  .toast.interest .title { color: var(--debt); }
+  .toast.hotfix { border-color: var(--hotfix); }
+  .toast.hotfix .title { color: var(--hotfix); }
   .toast .msg { margin-top: 6px; font-size: 13px; }
 
   .overlay {
@@ -199,7 +213,7 @@
     .stats dl div { flex-direction: column; gap: 0; }
     .stats dt { font-size: 10px; }
     .stats dd { font-size: 13px; }
-    #meter-label, .piece-name { font-size: 9px; }
+    #meter-label, #interest-label, .piece-name { font-size: 9px; }
     .log-panel { min-height: 0; height: 140px; }
     .log { inset: 26px 2px 6px 8px; }
     .ticker { font-size: 12px; }
@@ -252,12 +266,18 @@
           <div><dt>Sprint</dt><dd id="stat-level">1</dd></div>
           <div><dt>Debt paid</dt><dd class="paid" id="stat-lines">0</dd></div>
           <div><dt>Debt taken</dt><dd class="debt" id="stat-debt">0</dd></div>
+          <div><dt>Buried gaps</dt><dd class="debt" id="stat-gaps">0</dd></div>
         </dl>
       </section>
       <section class="panel">
         <h2>Debt ratio</h2>
         <div class="meter"><div id="meter-fill"></div></div>
         <div id="meter-label">0% · pristine</div>
+      </section>
+      <section class="panel">
+        <h2>Interest</h2>
+        <div class="meter"><div id="interest-fill"></div></div>
+        <div id="interest-label">no buried gaps</div>
       </section>
     </aside>
 
@@ -937,6 +957,69 @@ It's all spaghetti now. Al dente, at least.
 The migration to the migration has been cancelled.
 The codebase has been declared a historical landmark. No changes allowed.
 You've reached the "we should just start over" stage. Everyone does, eventually.
+
+[refactor]
+Deleted 400 lines. Every test still passes. Suspicious, but we'll take it.
+Finally ripped out the workaround for a bug that was fixed in 2017.
+Replaced the `sleep(5000)` with an actual event. Builds are 5 seconds faster.
+Removed a feature flag that had been at 100% for three years.
+Untangled the circular dependency. Nobody cheered, but they should have.
+Renamed `data2` to something a human could understand.
+Found the root cause instead of adding another retry.
+Collapsed four nearly identical helpers into one. The diff is all red. Beautiful.
+Split the god class. It is now several small, humble classes.
+Added the tests we promised "next sprint." It is, technically, a sprint.
+Replaced a regex nobody could read with a parser everybody can.
+Upgraded the framework across four major versions. Survived.
+Paid down the debt nobody put on the roadmap.
+Consolidated three date libraries into one. Time zones remain cursed.
+Turned the 2,000-line config file into sensible defaults.
+Removed the `if (user.id === 42)` special case. Sorry, user 42.
+Made the flaky test deterministic instead of deleting it. Growth.
+Moved the magic numbers into named constants. They are less magic now.
+Unforked the vendored library and went back to upstream.
+Retired the zombie cron job that emailed an address nobody owns.
+Deleted a microservice. Nothing broke. Nobody noticed. Perfect.
+Fixed the `TODO: fix this` from 2019. It said to fix it, so we did.
+Replaced a hand-rolled crypto function with the standard library. Security team exhales.
+Cleaned up the dead code path. It had been dead longer than some of the team has been here.
+
+[interest]
+Interest came due: the "temporary" workaround now needs its own workaround.
+The buried hack surfaced in prod. It brought friends.
+Compound interest: the shortcut you took last sprint just took one of its own.
+Legacy code rises from the depths. It has opinions about your architecture.
+The quick fix from Q2 needs a quick fix of its own.
+Debt collector on line one. It's the monolith, and it wants to talk.
+That skipped migration just ran itself at 3 a.m. Mostly.
+The dependency you pinned in 2021 has a CVE and a grudge.
+Your undocumented hack became someone else's critical path.
+The config nobody understands now has a config nobody understands.
+A buried TODO gained sentience and filed a bug against you.
+The old API you never deprecated just gained three new consumers.
+Interest payment: one sprint of velocity, auto-debited.
+The workaround's workaround's workaround is now load-bearing.
+Paging on-call: the thing you swept under the rug is now the rug.
+Legacy code, now with more legacy.
+The shortcut remembered where you live.
+Technical debt accrued interest. The rate is variable. It is always higher.
+
+[hotfix]
+Hotfix deployed straight to prod. It worked. Nobody knows why.
+Patched the hole at 2 a.m. The postmortem will be very brave about it.
+Hotfix shipped without review. This time it was the right call.
+A one-line fix for a three-week problem. Classic.
+Emergency patch applied. The change freeze has been briefly unfrozen.
+Hotfix went out. The incident channel can finally go back to memes.
+Fixed it in prod, then backported it to main. For once.
+Surgical hotfix: one character changed, one outage resolved.
+Rolled forward instead of back. Bold. Correct, even.
+The hotfix reached the part of the stack nobody dares touch.
+Cherry-picked the fix into three release branches without a single conflict. A miracle.
+Hotfix landed. The pager is quiet. Enjoy it.
+Dug down to the actual bug. It was an off-by-one. It is always an off-by-one.
+Deployed on a Friday. It was fine. Don't make this a habit.
+
 </script>
 
 <!--
@@ -957,6 +1040,9 @@ You've reached the "we should just start over" stage. Everyone does, eventually.
   const LINES_PER_LEVEL = 10;
   const LINE_SCORES = [0, 100, 300, 500, 800];
   const MIN_GRAVITY_MS = 16;
+  const INTEREST_DUE = 30; // interest points (one per buried gap, per lock) until a legacy row rises
+  const REFACTOR_POINTS = 50; // per buried gap fixed, × sprint
+  const HOTFIX_CHANCE = 1 / 25;
 
   const PIECE_TYPES = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
   const PIECES = {
@@ -967,6 +1053,8 @@ You've reached the "we should just start over" stage. Everyone does, eventually.
     Z: { name: 'Zombie Service', shape: [[1, 1, 0], [0, 1, 1], [0, 0, 0]] },
     J: { name: 'Jira Backlog', shape: [[1, 0, 0], [1, 1, 1], [0, 0, 0]] },
     L: { name: 'Vendor Lock-in', shape: [[0, 0, 1], [1, 1, 1], [0, 0, 0]] },
+    // Rare bonus piece, dealt outside the 7-bag. It drills down into the deepest gap in its column.
+    H: { name: 'Hotfix', shape: [[1]] },
   };
 
   // Super Rotation System wall kicks, as [dx, dy] with y pointing UP (as in the SRS spec).
@@ -1005,7 +1093,7 @@ You've reached the "we should just start over" stage. Everyone does, eventually.
   // SHAPES[type][rotation] = list of [x, y] offsets within the piece's bounding box.
   const SHAPES = {};
   const SPAWN = {};
-  for (const type of PIECE_TYPES) {
+  for (const type of Object.keys(PIECES)) {
     const states = [PIECES[type].shape];
     for (let r = 1; r < 4; r++) states.push(rotateCW(states[r - 1]));
     SHAPES[type] = states.map(toCells);
@@ -1116,6 +1204,7 @@ You've reached the "we should just start over" stage. Everyone does, eventually.
 
   function createGame(opts = {}) {
     const rng = opts.rng || Math.random;
+    const hotfixChance = opts.hotfixChance ?? HOTFIX_CHANCE;
     const emit = opts.onEvent || function () {};
 
     let bag = null;
@@ -1135,6 +1224,8 @@ You've reached the "we should just start over" stage. Everyone does, eventually.
       level: 1,
       piecesPlaced: 0,
       debtTaken: 0,
+      gaps: 0,
+      interest: 0,
       started: false,
       over: false,
       paused: false,
@@ -1158,7 +1249,25 @@ You've reached the "we should just start over" stage. Everyone does, eventually.
     function ghostY(p = g.piece) {
       let y = p.y;
       while (fits({ ...p, y: y + 1 })) y++;
+      if (p.type === 'H') {
+        // A hotfix drills past the surface into the deepest empty cell of its column.
+        const [[x]] = cells({ ...p, y });
+        for (let below = TOTAL_ROWS - 1; below > y; below--) if (g.board[below][x] === null) return below;
+      }
       return y;
+    }
+
+    // Empty cells with something above them in the same column.
+    function countGaps() {
+      let gaps = 0;
+      for (let x = 0; x < COLS; x++) {
+        let roofed = false;
+        for (let y = 0; y < TOTAL_ROWS; y++) {
+          if (g.board[y][x] !== null) roofed = true;
+          else if (roofed) gaps++;
+        }
+      }
+      return gaps;
     }
 
     function isGrounded() {
@@ -1169,22 +1278,26 @@ You've reached the "we should just start over" stage. Everyone does, eventually.
       g.board = Array.from({ length: TOTAL_ROWS }, emptyRow);
       bag = createShuffleBag(PIECE_TYPES, rng);
       g.queue = [];
-      fillQueue();
+      fillQueue(false);
       Object.assign(g, {
         holdType: null, canHold: true, score: 0, lines: 0, level: 1,
-        piecesPlaced: 0, debtTaken: 0, started: true, over: false, paused: false,
+        piecesPlaced: 0, debtTaken: 0, gaps: 0, interest: 0, started: true, over: false, paused: false,
       });
       emit({ type: 'start' });
       spawn(g.queue.shift());
       return g;
     }
 
-    function fillQueue() {
-      while (g.queue.length < QUEUE_SIZE) g.queue.push(bag.next());
+    // Hotfixes are extras slipped in between bag pieces, so the 7-bag stays intact.
+    function fillQueue(hotfixes) {
+      while (g.queue.length < QUEUE_SIZE) {
+        const hotfix = hotfixes && g.queue.at(-1) !== 'H' && rng() < hotfixChance;
+        g.queue.push(hotfix ? 'H' : bag.next());
+      }
     }
 
     function spawn(type) {
-      fillQueue();
+      fillQueue(g.piecesPlaced > 0);
       g.piece = { type, rot: 0, x: SPAWN[type].x, y: SPAWN[type].y };
       gravityAcc = 0;
       lockTimer = 0;
@@ -1225,7 +1338,8 @@ You've reached the "we should just start over" stage. Everyone does, eventually.
       if (!active()) return false;
       const from = g.piece.rot;
       const to = (from + (dir < 0 ? 3 : 1)) % 4;
-      const table = g.piece.type === 'I' ? KICKS_I : g.piece.type === 'O' ? null : KICKS_JLSTZ;
+      const type = g.piece.type;
+      const table = type === 'I' ? KICKS_I : type === 'O' || type === 'H' ? null : KICKS_JLSTZ;
       const kicks = table ? table[`${from}>${to}`] : NO_KICKS;
       const wasGrounded = isGrounded();
       for (const [kx, ky] of kicks) {
@@ -1279,7 +1393,8 @@ You've reached the "we should just start over" stage. Everyone does, eventually.
     }
 
     function lockPiece() {
-      const piece = g.piece;
+      const piece = g.piece.type === 'H' ? { ...g.piece, y: ghostY() } : g.piece;
+      const gapsBefore = countGaps();
       const placed = cells(piece);
       for (const [x, y] of placed) if (y >= 0) g.board[y][x] = piece.type;
       g.piece = null;
@@ -1304,21 +1419,44 @@ You've reached the "we should just start over" stage. Everyone does, eventually.
       const lockedOut = placed.some(([, y]) => y < 0) ||
         (cleared === 0 && placed.every(([, y]) => y < HIDDEN_ROWS));
 
+      g.gaps = countGaps();
+      const gapsFixed = Math.max(0, gapsBefore - g.gaps);
+
       const levelBefore = g.level;
       const points = LINE_SCORES[cleared] * g.level;
+      const refactorPoints = REFACTOR_POINTS * gapsFixed * g.level;
+      g.score += points + refactorPoints;
       if (cleared) {
-        g.score += points;
         g.lines += cleared;
         g.level = 1 + Math.floor(g.lines / LINES_PER_LEVEL);
-      } else {
+      } else if (!gapsFixed) {
         g.debtTaken++;
       }
 
-      emit({ type: 'lock', piece: piece.type, cells: placed, cleared, rows, points, gapsCovered });
+      emit({
+        type: 'lock', piece: piece.type, cells: placed, cleared, rows, points,
+        gapsCovered, gapsFixed, refactorPoints,
+      });
       if (g.level > levelBefore) emit({ type: 'levelUp', level: g.level });
 
-      if (lockedOut) gameOver();
+      const toppedOut = accrueInterest();
+      if (lockedOut || toppedOut) gameOver();
       else spawn(g.queue.shift());
+    }
+
+    // Buried gaps charge interest on every lock. When it comes due, a row of legacy code
+    // (with one gap) rises from the bottom. Returns true if that pushed the stack out the top.
+    function accrueInterest() {
+      g.interest += g.gaps;
+      if (g.interest < INTEREST_DUE) return false;
+      g.interest = 0;
+      const toppedOut = g.board[0].some((c) => c !== null);
+      const gapCol = Math.floor(rng() * COLS);
+      g.board.shift();
+      g.board.push(Array.from({ length: COLS }, (_, x) => (x === gapCol ? null : 'G')));
+      g.gaps = countGaps();
+      emit({ type: 'interest', gapCol });
+      return toppedOut;
     }
 
     function gameOver() {
@@ -1380,6 +1518,7 @@ You've reached the "we should just start over" stage. Everyone does, eventually.
 
   root.Techdebtris = {
     COLS, ROWS, HIDDEN_ROWS, TOTAL_ROWS, LOCK_DELAY, MAX_LOCK_RESETS, LINES_PER_LEVEL,
+    INTEREST_DUE, REFACTOR_POINTS,
     PIECE_TYPES, PIECES, SHAPES,
     mulberry32, createShuffleBag, parseMessages, createMessenger, gravityInterval, findFreeSlot, createGame,
   };
@@ -1396,7 +1535,7 @@ You've reached the "we should just start over" stage. Everyone does, eventually.
 
   const COLORS = {
     I: '#39c5cf', O: '#e3b341', T: '#a371f7', S: '#3fb950',
-    Z: '#f85149', J: '#58a6ff', L: '#f0883e',
+    Z: '#f85149', J: '#58a6ff', L: '#f0883e', H: '#f778ba', G: '#484f58',
   };
   const WELL = '#0a0d12';
   const GRID = 'rgba(255, 255, 255, 0.045)';
@@ -1415,6 +1554,7 @@ You've reached the "we should just start over" stage. Everyone does, eventually.
   const BEST_KEY = 'techdebtris.best';
 
   const CLEAR_POOLS = [null, 'single', 'double', 'triple', 'tetris'];
+  const HOTFIX_HINT = 'Hotfix incoming. It drills down into the deepest gap in its column. Aim it at buried debt.';
   const CLEAR_TITLES = [null, 'Debt paid', 'Double paydown', 'Triple refactor', 'TETRIS! Debt-free(ish)'];
 
   const els = {
@@ -1429,6 +1569,9 @@ You've reached the "we should just start over" stage. Everyone does, eventually.
     level: byId('stat-level'),
     lines: byId('stat-lines'),
     debt: byId('stat-debt'),
+    gaps: byId('stat-gaps'),
+    interestFill: byId('interest-fill'),
+    interestLabel: byId('interest-label'),
     meterFill: byId('meter-fill'),
     meterLabel: byId('meter-label'),
     tickerTag: byId('ticker-tag'),
@@ -1712,17 +1855,37 @@ You've reached the "we should just start over" stage. Everyone does, eventually.
       case 'hold':
         announce('hold', 'backlog', messenger.next('hold'));
         break;
+      case 'spawn':
+        if (e.piece === 'H') addLogEntry('hotfix', 'hotfix', HOTFIX_HINT);
+        break;
       case 'lock': {
-        if (e.cleared === 0) {
+        if (e.cleared === 0 && e.gapsFixed === 0) {
           // Every placement is logged; only burying a gap earns the pop-up on the board.
           announce('debt', '+debt', messenger.next('placed'), e.gapsCovered > 0);
           break;
         }
-        const text = messenger.next(CLEAR_POOLS[e.cleared]);
-        announce('paid', e.cleared > 1 ? `−debt ×${e.cleared}` : '−debt', text);
-        toast(e.cleared === 4 ? 'tetris' : 'paid', CLEAR_TITLES[e.cleared], text);
-        flashes.push({ rows: e.rows, t: performance.now() });
-        if (e.cleared === 4) celebrate();
+        if (e.cleared) {
+          const text = messenger.next(CLEAR_POOLS[e.cleared]);
+          announce('paid', e.cleared > 1 ? `−debt ×${e.cleared}` : '−debt', text);
+          toast(e.cleared === 4 ? 'tetris' : 'paid', CLEAR_TITLES[e.cleared], text);
+          flashes.push({ rows: e.rows, t: performance.now() });
+          if (e.cleared === 4) pulse('celebrate');
+        }
+        if (e.gapsFixed) {
+          const hotfix = e.piece === 'H';
+          const text = messenger.next(hotfix ? 'hotfix' : 'refactor');
+          const times = e.gapsFixed > 1 ? ` ×${e.gapsFixed}` : '';
+          announce(hotfix ? 'hotfix' : 'paid', `${hotfix ? 'hotfix' : 'refactor'}${times}`, text);
+          toast(hotfix ? 'hotfix' : 'paid', `${hotfix ? 'Hotfix deployed' : 'Refactor'} +${e.refactorPoints}`, text);
+        }
+        break;
+      }
+      case 'interest': {
+        const text = messenger.next('interest');
+        announce('debt', 'interest', text);
+        toast('interest', 'Interest due', text);
+        flashes.push({ rows: [T.TOTAL_ROWS - 1], t: performance.now(), rgb: '248, 81, 73' });
+        pulse('shake');
         break;
       }
       case 'levelUp': {
@@ -1737,10 +1900,10 @@ You've reached the "we should just start over" stage. Everyone does, eventually.
     }
   }
 
-  function celebrate() {
-    els.boardWrap.classList.remove('celebrate');
+  function pulse(animation) {
+    els.boardWrap.classList.remove('celebrate', 'shake');
     void els.boardWrap.offsetWidth; // restart the animation
-    els.boardWrap.classList.add('celebrate');
+    els.boardWrap.classList.add(animation);
   }
 
   // ---------- overlay / game flow ----------
@@ -2006,7 +2169,7 @@ You've reached the "we should just start over" stage. Everyone does, eventually.
     flashes = flashes.filter((f) => now - f.t < FLASH_MS);
     for (const flash of flashes) {
       const alpha = 1 - (now - flash.t) / FLASH_MS;
-      ctx.fillStyle = `rgba(63, 185, 80, ${0.6 * alpha})`;
+      ctx.fillStyle = `rgba(${flash.rgb || '63, 185, 80'}, ${0.6 * alpha})`;
       for (const row of flash.rows) if (row >= top) ctx.fillRect(0, (row - top) * size, W, size);
     }
   }
@@ -2053,6 +2216,14 @@ You've reached the "we should just start over" stage. Everyone does, eventually.
     setText(els.level, game.level);
     setText(els.lines, game.lines);
     setText(els.debt, game.debtTaken);
+    setText(els.gaps, game.gaps);
+
+    const accrued = game.started ? game.interest / T.INTEREST_DUE : 0;
+    els.interestFill.style.width = `${Math.round(accrued * 100)}%`;
+    els.interestFill.style.backgroundColor = accrued >= 0.7 ? 'var(--debt)' : 'var(--level)';
+    setText(els.interestLabel, game.gaps
+      ? `due in ${Math.ceil((T.INTEREST_DUE - game.interest) / game.gaps)} pieces`
+      : 'no buried gaps');
 
     const ratio = game.started ? game.debtRatio() : 0;
     const [, label, color] = DEBT_BANDS.find(([max]) => ratio < max);

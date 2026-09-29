@@ -19,10 +19,25 @@ ghost piece, hold, lock delay, and Guideline scoring and gravity. The engineerin
 | Hold                | **Backlog.** Deferred, parked, "let's revisit in Q3."                  |
 | Level               | **Sprint.** Every 10 lines brings a reorg, a pivot, or a promotion.    |
 | Stack height        | **Debt ratio**, from "pristine" to "bankruptcy imminent."              |
+| Holes in the stack  | **Buried gaps.** They charge interest (see below).                     |
+| Garbage rows        | **Legacy code.** Rises from the bottom when interest comes due.        |
 | Game over           | **Technical bankruptcy.**                                              |
 
 The pieces have names, too: the I is the **Monolith**, O the **Legacy DB**, T a **TODO**,
 S **Spaghetti Code**, Z a **Zombie Service**, J the **Jira Backlog**, and L **Vendor Lock-in**.
+
+### Interest, refactors, and hotfixes
+
+- **Interest.** A buried gap is an empty cell with something above it. After every piece locks, each
+  buried gap on the board adds a point of interest. At 30 points, interest comes due: a row of
+  legacy code (with one gap) rises from the bottom and pushes the stack up. The Interest panel
+  shows how many pieces you have left.
+- **Refactor.** Whenever a piece leaves fewer buried gaps than before, by clearing the rows above
+  them or by tucking a piece in, you earn 50 points per gap fixed × the current sprint. A refactor
+  doesn't count as debt taken.
+- **Hotfix.** Roughly one piece in 25 (never at the very start) is a pink 1×1 **Hotfix**, dealt
+  as an extra so the 7-bag stays intact. It drills through the stack into the deepest empty cell in
+  its column, and its ghost shows where it will end up.
 
 ### Controls
 
@@ -42,17 +57,21 @@ you switch tabs. Your best score is kept in `localStorage`.
 
 ### Scoring
 
-Line clears pay 100 / 300 / 500 / 800 × the current sprint. Soft drop earns 1 point per row,
+Line clears pay 100 / 300 / 500 / 800 × the current sprint. Each buried gap fixed pays 50 × the
+current sprint. Soft drop earns 1 point per row,
 hard drop 2. Gravity follows the Tetris Guideline curve, starting at one row per second.
 
 ## Messages
 
-There are ~575 messages, split into pools:
+There are ~630 messages, split into pools:
 
 | Pool       | Shown when                | Count |
 | ---------- | ------------------------- | ----- |
 | `start`    | A game starts             | 12    |
 | `placed`   | A piece locks, no clear   | 281   |
+| `refactor` | A buried gap is fixed     | 24    |
+| `interest` | Interest comes due        | 18    |
+| `hotfix`   | A hotfix fixes a gap      | 14    |
 | `hold`     | A piece goes to backlog   | 20    |
 | `single`   | 1 line cleared            | 105   |
 | `double`   | 2 lines cleared           | 42    |

@@ -7,9 +7,9 @@ const { COLS, ROWS, HIDDEN_ROWS, LOCK_DELAY, MAX_LOCK_RESETS } = T;
 const TOTAL = ROWS + HIDDEN_ROWS;
 const BOTTOM = TOTAL - 1;
 
-function newGame(seed = 42) {
+function newGame(seed = 42, opts = {}) {
   const events = [];
-  const game = T.createGame({ rng: T.mulberry32(seed), onEvent: (e) => events.push(e) });
+  const game = T.createGame({ rng: T.mulberry32(seed), onEvent: (e) => events.push(e), ...opts });
   game.start();
   return { game, events };
 }
@@ -449,5 +449,153 @@ describe('debt ratio', () => {
     assert.equal(game.debtRatio(), 1 / ROWS);
     game.board[HIDDEN_ROWS][0] = 'X';
     assert.equal(game.debtRatio(), 1);
+  });
+});
+
+describe('buried gaps and refactoring', () => {
+  test('the board tracks how many empty cells are buried under the stack', () => {
+    const { game } = newGame();
+    placeAtColumn(game, 'T', 2, 4); // pointing down: both arms roof over one empty cell each
+    game.hardDrop();
+    assert.equal(game.gaps, 2);
+  });
+
+  test('uncovering a buried gap pays a refactor bonus on top of the line clear', () => {
+    const { game, events } = newGame();
+    fillRow(game, BOTTOM, [0]); // gap at column 0...
+    fillRow(game, BOTTOM - 1, [8, 9]); // ...roofed over by this row, which the O will clear
+    placeAtColumn(game, 'O', 0, 8);
+    const before = game.score;
+    const distance = game.hardDrop();
+    const lock = locks(events).at(-1);
+    assert.equal(lock.cleared, 1);
+    assert.equal(lock.gapsFixed, 1);
+    assert.equal(lock.refactorPoints, T.REFACTOR_POINTS);
+    assert.equal(game.score - before, distance * 2 + 100 + T.REFACTOR_POINTS);
+    assert.equal(game.gaps, 0);
+  });
+
+  test('burying a gap is debt taken, not a refactor', () => {
+    const { game, events } = newGame();
+    placeAtColumn(game, 'T', 2, 4);
+    game.hardDrop();
+    assert.equal(locks(events).at(-1).gapsFixed, 0);
+    assert.equal(game.debtTaken, 1);
+  });
+});
+
+describe('interest', () => {
+  test('no buried gaps means no interest', () => {
+    const { game, events } = newGame(42, { hotfixChance: 0 });
+    for (let i = 0; i < 3; i++) {
+      placeAtColumn(game, 'O', 0, i * 2);
+      game.hardDrop();
+    }
+    assert.equal(game.interest, 0);
+    assert.equal(events.filter((e) => e.type === 'interest').length, 0);
+  });
+
+  test('every lock accrues one point of interest per buried gap', () => {
+    const { game } = newGame();
+    placeAtColumn(game, 'T', 2, 4);
+    game.hardDrop();
+    assert.equal(game.interest, 2);
+    placeAtColumn(game, 'O', 0, 0);
+    game.hardDrop();
+    assert.equal(game.interest, 4);
+  });
+
+  test('when interest comes due, a legacy row with one gap rises from the bottom', () => {
+    const { game, events } = newGame();
+    placeAtColumn(game, 'T', 2, 4);
+    game.interest = T.INTEREST_DUE - 1;
+    game.hardDrop();
+    const stackBefore = game.board[BOTTOM - 1].map((c) => c !== null);
+    const due = events.filter((e) => e.type === 'interest');
+    assert.equal(due.length, 1);
+    const legacy = game.board[BOTTOM];
+    assert.equal(legacy.filter((c) => c === null).length, 1);
+    assert.equal(legacy.indexOf(null), due[0].gapCol);
+    assert.ok(legacy.every((c) => c === null || c === 'G'));
+    assert.ok(game.board[BOTTOM - 1].some((c) => c === 'T'), 'the stack moved up a row');
+    assert.deepEqual(stackBefore, game.board[BOTTOM - 1].map((c) => c !== null));
+    assert.equal(game.interest, 0);
+  });
+
+  test('interest that pushes the stack out of the top ends the game', () => {
+    const { game } = newGame();
+    for (let y = 0; y < TOTAL; y++) game.board[y][0] = 'X';
+    game.board[BOTTOM][0] = null; // one buried gap, so interest accrues
+    game.interest = T.INTEREST_DUE - 1;
+    placeAtColumn(game, 'O', 0, 6);
+    game.hardDrop();
+    assert.equal(game.over, true);
+  });
+});
+
+describe('hotfix', () => {
+  test('is never dealt at the start of a game, only mixed in later', () => {
+    const { game } = newGame(42, { hotfixChance: 1 });
+    assert.notEqual(game.piece.type, 'H');
+    assert.ok(!game.queue.includes('H'));
+    game.hardDrop();
+    assert.ok(game.queue.includes('H'));
+  });
+
+  test('is an extra piece: the 7-bag still deals every tetromino', () => {
+    const { game } = newGame(7, { hotfixChance: 0.5 });
+    const dealt = [];
+    for (let i = 0; i < 40 && !game.over; i++) {
+      dealt.push(game.piece.type);
+      game.board = game.board.map((row) => row.map(() => null)); // never top out
+      game.hardDrop();
+    }
+    const regular = dealt.filter((t) => t !== 'H');
+    assert.ok(dealt.includes('H'));
+    for (let i = 0; i + 7 <= regular.length; i += 7) {
+      assert.deepEqual(regular.slice(i, i + 7).sort(), [...T.PIECE_TYPES].sort());
+    }
+  });
+
+  test('never deals two hotfixes in a row', () => {
+    const { game } = newGame(1, { hotfixChance: 1 });
+    for (let i = 0; i < 10; i++) {
+      game.board = game.board.map((row) => row.map(() => null));
+      game.hardDrop();
+    }
+    const q = [game.piece.type, ...game.queue];
+    for (let i = 1; i < q.length; i++) assert.ok(!(q[i] === 'H' && q[i - 1] === 'H'));
+  });
+
+  test('drills through the stack into the deepest buried gap in its column', () => {
+    const { game, events } = newGame();
+    fillRow(game, BOTTOM, [3, 7]);
+    fillRow(game, BOTTOM - 1, [7]);
+    placeAtColumn(game, 'H', 0, 3);
+    assert.equal(game.ghostY(), BOTTOM);
+    game.hardDrop();
+    assert.equal(game.board[BOTTOM][3], 'H');
+    const lock = locks(events).at(-1);
+    assert.deepEqual(lock.cells, [[3, BOTTOM]]);
+    assert.equal(lock.gapsFixed, 1);
+    assert.equal(game.debtTaken, 0);
+  });
+
+  test('drills down even when gravity locks it on top of the stack', () => {
+    const { game } = newGame();
+    fillRow(game, BOTTOM, [3, 7]);
+    fillRow(game, BOTTOM - 1, [7]);
+    placeAtColumn(game, 'H', 0, 3, BOTTOM - 2);
+    game.tick(LOCK_DELAY);
+    assert.equal(game.board[BOTTOM][3], 'H');
+    assert.equal(game.board[BOTTOM - 2][3], null);
+  });
+
+  test('with nothing to fix, it just lands like any other piece', () => {
+    const { game } = newGame();
+    placeAtColumn(game, 'H', 0, 5);
+    game.hardDrop();
+    assert.equal(game.board[BOTTOM][5], 'H');
+    assert.equal(game.debtTaken, 1);
   });
 });
