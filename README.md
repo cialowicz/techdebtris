@@ -52,8 +52,23 @@ S **Spaghetti Code**, Z a **Zombie Service**, J the **Jira Backlog**, and L **Ve
 | `P` / `Esc`             | Pause            |
 | `Enter`                 | Start / restart  |
 
-On touch devices, on-screen buttons appear below the board. The game pauses automatically when
-you switch tabs. Your best score is kept in `localStorage`.
+On phones and tablets, the whole play area takes gestures:
+
+| Gesture                  | Action               |
+| ------------------------ | -------------------- |
+| Drag left / right        | Move (one column per cell of travel) |
+| Tap, or swipe up         | Rotate clockwise     |
+| Two-finger tap           | Rotate back          |
+| Drag down                | Soft drop            |
+| Flick down               | Hard drop            |
+| Tap the Backlog panel    | Move to backlog (hold) |
+
+If you'd rather have buttons, tap "Use on-screen buttons" on the start or pause screen; the choice
+is remembered. On narrow screens the layout switches to a phone layout: stats across the top, the
+board as large as the screen allows, and the git log hidden (the ticker still shows the latest
+entry).
+
+The game pauses automatically when you switch tabs. Your best score is kept in `localStorage`.
 
 ### Scoring
 

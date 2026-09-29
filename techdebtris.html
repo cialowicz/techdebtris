@@ -181,6 +181,11 @@
   .keys dt { text-align: right; }
   .keys dd { margin: 0; }
   .touch-tip { display: none; font-size: 12px; color: var(--muted); }
+  .touch-tip p + p { margin-top: 2px; }
+  .link-btn {
+    font: inherit; color: var(--init); background: none; border: 0; padding: 8px;
+    text-decoration: underline; text-underline-offset: 2px; cursor: pointer;
+  }
   .over-stats { display: grid; grid-template-columns: auto auto; gap: 4px 16px; margin: 0; font-size: 13px; }
   .over-stats dt { color: var(--muted); text-align: right; }
   .over-stats dd { margin: 0; font: 600 13px var(--mono); text-align: left; }
@@ -189,40 +194,54 @@
   .hint { color: var(--faint); font-size: 12px; text-align: center; }
   .hint kbd { color: var(--muted); }
 
-  .touch { display: none; }
+  .touch, .touch-only { display: none; }
 
+  /* Phones: stats across the top, the board as big as the screen allows, a narrow strip beside it
+     for the backlog, preview, and meters. The git log is hidden; the ticker shows the latest entry. */
   @media (max-width: 760px) {
     :root {
-      --side: 72px;
-      --board-h: clamp(260px, min(calc(100dvh - 340px), calc((100vw - 32px - 2 * var(--side) - 16px) * 2)), 640px);
+      --strip: 84px;
+      --chrome-h: 176px; /* header + stats bar + ticker + gaps */
+      --board-h: clamp(300px, min(calc(100dvh - var(--chrome-h) - var(--controls-h, 0px)), calc((100vw - 40px - var(--strip)) * 2)), 640px);
     }
-    .app { padding: 10px 16px 0; gap: 8px; }
-    .logo { font-size: 20px; }
+    .app { min-height: 0; padding: 8px 16px 0; gap: 8px; }
+    .logo { font-size: 18px; }
     .tagline, .hint { display: none; }
     .layout {
-      grid-template-columns: var(--side) auto var(--side);
-      grid-template-rows: auto auto;
-      grid-template-areas: "left board next" "log log log";
+      grid-template-columns: auto var(--strip);
+      grid-template-rows: auto auto auto auto auto 1fr;
+      grid-template-areas: "stats stats" "board hold" "board next" "board ratio" "board interest" "board .";
       gap: 8px;
+      justify-content: center;
     }
-    .left { gap: 8px; }
+    .left { display: contents; }
+    .hold-panel { grid-area: hold; }
+    .stats { grid-area: stats; }
+    .ratio-panel { grid-area: ratio; }
+    .interest-panel { grid-area: interest; }
+    .log-panel { display: none; }
     .panel { padding: 6px; border-radius: 8px; }
     .panel h2 { font-size: 9px; letter-spacing: 0.04em; margin-bottom: 4px; }
     .panel h2 kbd { display: none; }
-    .stats dl { gap: 4px; }
-    .stats dl div { flex-direction: column; gap: 0; }
-    .stats dt { font-size: 10px; }
+    .stats dl { grid-template-columns: repeat(6, auto); justify-content: space-between; gap: 4px; }
+    .stats dl div { flex-direction: column; align-items: center; gap: 0; }
+    .stats dt { font-size: 9px; white-space: nowrap; }
     .stats dd { font-size: 13px; }
     #meter-label, #interest-label, .piece-name { font-size: 9px; }
-    .log-panel { min-height: 0; height: 140px; }
-    .log { inset: 26px 2px 6px 8px; }
-    .ticker { font-size: 12px; }
+    /* Tag and message flow together, clamped to four lines so the board never jumps. */
+    .ticker { display: block; height: calc(4 * 1.35em); min-height: 0; overflow: hidden; font-size: 11.5px; line-height: 1.35; }
+    .ticker .tag { display: inline-block; margin-right: 6px; }
     .flyer { left: 2px; right: 2px; padding: 6px 8px; font-size: 12px; }
     .pane h2 { font-size: 18px; }
   }
 
   @media (pointer: coarse) {
-    .touch {
+    /* Swipes drive the game, so the page itself must not scroll, zoom, or select text. */
+    .layout { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+    .overlay { touch-action: pan-y; }
+    .hold-panel { cursor: pointer; }
+    :root.buttons { --controls-h: 76px; } /* on :root, where --board-h is computed */
+    .buttons .touch {
       position: sticky; bottom: 0; z-index: 5;
       display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
       width: 100%; max-width: 520px;
@@ -236,8 +255,9 @@
     }
     .touch button:active { background: var(--panel-2); }
     .touch button small { display: block; font-size: 9px; color: var(--muted); }
-    .keys, .hint { display: none; }
+    .keys, .hint, .no-touch { display: none; }
     .touch-tip { display: block; }
+    .touch-only { display: inline; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -252,9 +272,9 @@
     <p class="tagline">Every piece is a shortcut. Every line is a payoff.</p>
   </header>
 
-  <main class="layout">
+  <main class="layout" id="layout">
     <aside class="left">
-      <section class="panel">
+      <section class="panel hold-panel" id="hold-panel">
         <h2>Backlog <kbd>C</kbd></h2>
         <canvas class="preview" id="hold" aria-label="Held piece"></canvas>
         <div class="piece-name" id="hold-name">empty</div>
@@ -269,12 +289,12 @@
           <div><dt>Buried gaps</dt><dd class="debt" id="stat-gaps">0</dd></div>
         </dl>
       </section>
-      <section class="panel">
+      <section class="panel ratio-panel">
         <h2>Debt ratio</h2>
         <div class="meter"><div id="meter-fill"></div></div>
         <div id="meter-label">0% · pristine</div>
       </section>
-      <section class="panel">
+      <section class="panel interest-panel">
         <h2>Interest</h2>
         <div class="meter"><div id="interest-fill"></div></div>
         <div id="interest-label">no buried gaps</div>
@@ -302,12 +322,19 @@
               <dt><kbd>C</kbd> <kbd>Shift</kbd></dt><dd>Move to backlog</dd>
               <dt><kbd>P</kbd> <kbd>Esc</kbd></dt><dd>Pause</dd>
             </dl>
-            <p class="touch-tip">Use the buttons below the board to play.</p>
+            <div class="touch-tip">
+              <p>Drag to move · Tap or swipe up to rotate · Two-finger tap to rotate back</p>
+              <p>Drag down to speed up · Flick down to drop · Tap Backlog to defer</p>
+              <button class="link-btn" type="button" data-toggle-buttons>Use on-screen buttons</button>
+            </div>
           </div>
           <div class="pane" id="ov-pause" hidden>
             <h2>Paused</h2>
             <p class="sub" id="pause-msg"></p>
             <button class="btn" id="resume-btn" type="button">Back to work ▸</button>
+            <div class="touch-tip">
+              <button class="link-btn" type="button" data-toggle-buttons>Use on-screen buttons</button>
+            </div>
           </div>
           <div class="pane over" id="ov-over" hidden>
             <h2>Technical<br>bankruptcy</h2>
@@ -325,7 +352,7 @@
       </div>
       <div class="ticker" id="ticker" aria-live="polite">
         <span class="tag init" id="ticker-tag">README</span>
-        <span class="msg" id="ticker-msg">Press <kbd>Enter</kbd> to start your first sprint.</span>
+        <span class="msg" id="ticker-msg"><span class="no-touch">Press <kbd>Enter</kbd> to start your first sprint.</span><span class="touch-only">Tap “Start sprint” to begin.</span></span>
       </div>
     </div>
 
@@ -1202,6 +1229,60 @@ Deployed on a Friday. It was fine. Don't make this a habit.
     return { top: a + (b - a - size) / 2, below: Boolean(underneath) };
   }
 
+  // Touch controls. Turns one finger's movement into game actions: drag sideways to move a
+  // column per cell of travel, drag down to soft-drop a row per cell, flick down to hard-drop,
+  // tap or swipe up to rotate. `cell` is the on-screen width of a board column, in px.
+  const GESTURE_LOCK = 0.5; // cells of travel before a drag commits to horizontal or vertical
+  const TAP_MS = 250;
+  const FLICK_SPEED = 0.7; // px/ms downward, measured over the last FLICK_WINDOW_MS
+  const FLICK_WINDOW_MS = 80;
+
+  function createGestureTracker(onAction) {
+    let s = null;
+
+    function start(x, y, t, cell) {
+      s = { x0: x, y0: y, t0: t, ax: x, ay: y, cell, axis: null, rotated: false, samples: [{ y, t }] };
+    }
+
+    function move(x, y, t) {
+      if (!s) return;
+      s.samples.push({ y, t });
+      while (s.samples.length > 2 && t - s.samples[1].t >= FLICK_WINDOW_MS) s.samples.shift();
+      if (!s.axis) {
+        const dx = x - s.x0;
+        const dy = y - s.y0;
+        if (Math.max(Math.abs(dx), Math.abs(dy)) < s.cell * GESTURE_LOCK) return;
+        s.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+      }
+      if (s.axis === 'x') {
+        while (x - s.ax >= s.cell) { s.ax += s.cell; onAction('right'); }
+        while (s.ax - x >= s.cell) { s.ax -= s.cell; onAction('left'); }
+        return;
+      }
+      if (!s.rotated && s.y0 - y >= s.cell) {
+        s.rotated = true;
+        onAction('cw');
+      }
+      while (y - s.ay >= s.cell) { s.ay += s.cell; onAction('soft'); }
+    }
+
+    function end(x, y, t) {
+      if (!s) return;
+      move(x, y, t);
+      const g = s;
+      s = null;
+      if (!g.axis) {
+        if (t - g.t0 < TAP_MS) onAction('cw');
+        return;
+      }
+      if (g.axis !== 'y' || g.rotated || y - g.y0 < g.cell) return;
+      const from = g.samples[0];
+      if ((y - from.y) / Math.max(1, t - from.t) >= FLICK_SPEED) onAction('hard');
+    }
+
+    return { start, move, end, cancel() { s = null; } };
+  }
+
   function createGame(opts = {}) {
     const rng = opts.rng || Math.random;
     const hotfixChance = opts.hotfixChance ?? HOTFIX_CHANCE;
@@ -1520,7 +1601,8 @@ Deployed on a Friday. It was fine. Don't make this a habit.
     COLS, ROWS, HIDDEN_ROWS, TOTAL_ROWS, LOCK_DELAY, MAX_LOCK_RESETS, LINES_PER_LEVEL,
     INTEREST_DUE, REFACTOR_POINTS,
     PIECE_TYPES, PIECES, SHAPES,
-    mulberry32, createShuffleBag, parseMessages, createMessenger, gravityInterval, findFreeSlot, createGame,
+    mulberry32, createShuffleBag, parseMessages, createMessenger, gravityInterval, findFreeSlot,
+    createGestureTracker, createGame,
   };
 })(typeof window !== 'undefined' ? window : globalThis);
 </script>
@@ -1552,6 +1634,8 @@ Deployed on a Friday. It was fine. Don't make this a habit.
   const TOAST_MS = 2600;
   const LOG_LIMIT = 80;
   const BEST_KEY = 'techdebtris.best';
+  const BUTTONS_KEY = 'techdebtris.buttons';
+  const TWO_FINGER_TAP_MS = 300;
 
   const CLEAR_POOLS = [null, 'single', 'double', 'triple', 'tetris'];
   const HOTFIX_HINT = 'Hotfix incoming. It drills down into the deepest gap in its column. Aim it at buried debt.';
@@ -1578,6 +1662,8 @@ Deployed on a Friday. It was fine. Don't make this a habit.
     ticker: byId('ticker'),
     tickerMsg: byId('ticker-msg'),
     boardCol: byId('board-col'),
+    layout: byId('layout'),
+    holdPanel: byId('hold-panel'),
     log: byId('log'),
     toast: byId('toast'),
     toastTitle: byId('toast-title'),
@@ -1603,20 +1689,28 @@ Deployed on a Friday. It was fine. Don't make this a habit.
 
   // ---------- persistence ----------
 
-  function loadBest() {
+  function readStored(key) {
     try {
-      return Number(localStorage.getItem(BEST_KEY)) || 0;
+      return localStorage.getItem(key);
     } catch {
-      return 0;
+      return null;
     }
   }
 
-  function saveBest(value) {
+  function writeStored(key, value) {
     try {
-      localStorage.setItem(BEST_KEY, String(value));
+      localStorage.setItem(key, String(value));
     } catch {
-      // Storage unavailable (private mode, blocked cookies): best score just won't persist.
+      // Storage unavailable (private mode, blocked cookies): the setting just won't persist.
     }
+  }
+
+  function loadBest() {
+    return Number(readStored(BEST_KEY)) || 0;
+  }
+
+  function saveBest(value) {
+    writeStored(BEST_KEY, value);
   }
 
   // ---------- messages ----------
@@ -2066,6 +2160,83 @@ Deployed on a Friday. It was fine. Don't make this a habit.
       button.addEventListener(type, () => release(action));
     }
     button.addEventListener('contextmenu', (e) => e.preventDefault());
+  }
+
+  // ---------- touch gestures ----------
+
+  const playing = () => game.started && !game.over && !game.paused;
+
+  const gestures = T.createGestureTracker((action) => {
+    if (!playing()) return;
+    switch (action) {
+      case 'left': game.move(-1); break;
+      case 'right': game.move(1); break;
+      case 'soft': game.softDrop(); break;
+      case 'hard': game.hardDrop(); break;
+      case 'cw': game.rotate(1); break;
+    }
+  });
+
+  // Fingers currently down on the play area. A second finger turns the gesture into a
+  // two-finger tap (rotate back) instead.
+  const fingers = new Set();
+  let twoFingerAt = null;
+
+  els.layout.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse' || !playing() || e.target.closest('button, #hold-panel')) return;
+    fingers.add(e.pointerId);
+    if (fingers.size === 1) {
+      twoFingerAt = null;
+      gestures.start(e.clientX, e.clientY, e.timeStamp, els.board.getBoundingClientRect().width / T.COLS);
+    } else if (fingers.size === 2) {
+      gestures.cancel();
+      twoFingerAt = e.timeStamp;
+    }
+  });
+
+  els.layout.addEventListener('pointermove', (e) => {
+    if (fingers.size === 1 && fingers.has(e.pointerId) && twoFingerAt === null) {
+      gestures.move(e.clientX, e.clientY, e.timeStamp);
+    }
+  });
+
+  function liftFinger(e) {
+    if (!fingers.delete(e.pointerId)) return;
+    if (twoFingerAt !== null) {
+      if (fingers.size > 0) return;
+      const tapped = e.type === 'pointerup' && e.timeStamp - twoFingerAt < TWO_FINGER_TAP_MS;
+      twoFingerAt = null;
+      if (tapped && playing()) game.rotate(-1);
+    } else if (e.type === 'pointerup') {
+      gestures.end(e.clientX, e.clientY, e.timeStamp);
+    } else {
+      gestures.cancel();
+    }
+  }
+  els.layout.addEventListener('pointerup', liftFinger);
+  els.layout.addEventListener('pointercancel', liftFinger);
+
+  els.holdPanel.addEventListener('pointerdown', (e) => {
+    if (!playing()) return;
+    e.preventDefault();
+    game.hold();
+  });
+
+  // The on-screen button bar is optional on touch devices; swipes work either way.
+  function showButtons(on) {
+    document.documentElement.classList.toggle('buttons', on);
+    for (const b of document.querySelectorAll('[data-toggle-buttons]')) {
+      b.textContent = on ? 'Hide on-screen buttons' : 'Use on-screen buttons';
+    }
+  }
+  showButtons(readStored(BUTTONS_KEY) === '1');
+  for (const b of document.querySelectorAll('[data-toggle-buttons]')) {
+    b.addEventListener('click', () => {
+      const on = !document.documentElement.classList.contains('buttons');
+      showButtons(on);
+      writeStored(BUTTONS_KEY, on ? '1' : '0');
+      b.blur();
+    });
   }
 
   function onButton(id, fn) {
