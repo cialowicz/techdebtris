@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
-import { html, executableScripts } from './harness.mjs';
+import { html, executableScripts, scriptById } from './harness.mjs';
 
 test('every inline script compiles', () => {
   const scripts = executableScripts();
@@ -28,4 +28,11 @@ test('every element the UI looks up by id exists in the markup', () => {
 test('has a title and a mobile viewport', () => {
   assert.match(html, /<title>Techdebtris<\/title>/);
   assert.match(html, /<meta name="viewport"[^>]*width=device-width/);
+});
+
+test('messages live in the ticker and never cover the board', () => {
+  assert.doesNotMatch(html, /class="toast"|\.flyer\b/);
+  const ui = scriptById('techdebtris-ui');
+  assert.doesNotMatch(ui, /\b(?:boardCol|boardWrap)\.(?:append|prepend|appendChild)\(/);
+  assert.match(html, /\.ticker\.highlight\b/);
 });

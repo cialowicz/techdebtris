@@ -413,34 +413,6 @@ describe('game over', () => {
   });
 });
 
-describe('findFreeSlot (placing pop-ups away from the action)', () => {
-  // A 0..600px playfield with a 100px-tall card to place.
-  const slot = (blocked) => T.findFreeSlot(0, 600, 100, blocked);
-
-  test('centers the card when nothing is in the way', () => {
-    assert.deepEqual(slot([]), { top: 250, below: true });
-  });
-
-  test('prefers the space below every blocked zone (under the landing shadow)', () => {
-    // Piece near the top, shadow in the middle: the gap between them is bigger,
-    // but the space under the shadow is out of the piece's path entirely.
-    assert.deepEqual(slot([[0, 60], [300, 380]]), { top: 440, below: true });
-  });
-
-  test('otherwise uses the biggest gap between blocked zones', () => {
-    // Shadow near the floor leaves no room below; there are two gaps above it.
-    assert.deepEqual(slot([[0, 60], [200, 230], [520, 600]]), { top: 325, below: false });
-  });
-
-  test('returns null when no gap is tall enough', () => {
-    assert.equal(slot([[0, 60], [150, 250], [340, 440], [530, 600]]), null);
-  });
-
-  test('merges overlapping zones and ignores anything outside the playfield', () => {
-    assert.deepEqual(slot([[-200, 40], [20, 100], [90, 150], [650, 900]]), { top: 325, below: true });
-  });
-});
-
 describe('debt ratio', () => {
   test('is the stack height as a fraction of the well', () => {
     const { game } = newGame();

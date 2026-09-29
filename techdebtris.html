@@ -115,8 +115,44 @@
   }
   #board { display: block; width: 100%; height: 100%; }
 
-  .ticker { display: flex; align-items: flex-start; gap: 8px; min-height: 3.4em; font-size: 13px; }
+  /* The ticker is where every message lands. Big moments light it up in their color (--fx)
+     with a headline in the tag; small ones just give it a little wiggle. */
+  .ticker {
+    display: flex; align-items: flex-start; gap: 8px; min-height: 3.4em; font-size: 13px;
+    margin: 0 -6px; padding: 4px 6px; border: 1px solid transparent; border-radius: 8px;
+    transition: border-color 0.3s, background-color 0.3s, box-shadow 0.3s;
+  }
   .ticker .msg { animation: fadein 0.25s ease-out; }
+  .ticker.highlight {
+    border-color: var(--fx);
+    background: color-mix(in srgb, var(--fx) 12%, transparent);
+    box-shadow: 0 0 16px color-mix(in srgb, var(--fx) 35%, transparent);
+  }
+  .ticker.highlight .tag { color: var(--bg); background: var(--fx); border-color: var(--fx); text-transform: uppercase; }
+  .ticker.fx-nudge .tag { animation: nudge 0.35s ease-out; }
+  .ticker.fx-wiggle { animation: wiggle 0.5s ease-out; }
+  .ticker.fx-pop { animation: pop 0.45s cubic-bezier(0.2, 1.6, 0.4, 1); }
+  .ticker.fx-bigpop { animation: bigpop 0.8s cubic-bezier(0.2, 1.6, 0.4, 1); }
+  @keyframes nudge {
+    30% { transform: translateX(-3px) rotate(-5deg); }
+    65% { transform: translateX(2px) rotate(3deg); }
+  }
+  @keyframes wiggle {
+    15% { transform: translateX(-6px) rotate(-1.2deg); }
+    35% { transform: translateX(5px) rotate(1deg); }
+    55% { transform: translateX(-3px) rotate(-0.5deg); }
+    75% { transform: translateX(2px); }
+  }
+  @keyframes pop {
+    0% { transform: scale(0.96); }
+    45% { transform: scale(1.06); }
+  }
+  @keyframes bigpop {
+    0% { transform: scale(0.9); }
+    30% { transform: scale(1.12) rotate(-1.5deg); }
+    55% { transform: scale(0.98) rotate(1deg); }
+    75% { transform: scale(1.03); }
+  }
   .tag {
     flex: none; white-space: nowrap; font: 600 11px/1.5 var(--mono);
     padding: 0 6px; border-radius: 4px; border: 1px solid currentColor;
@@ -134,32 +170,6 @@
   .log .meta { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
   .log .hash { font: 11px var(--mono); color: var(--faint); }
   @keyframes fadein { from { opacity: 0; transform: translateY(-3px); } }
-
-  .flyer {
-    position: absolute; left: 6px; right: 6px; z-index: 2; pointer-events: none;
-    display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px;
-    font-size: 14px; font-weight: 500; line-height: 1.35;
-    background: rgba(13, 17, 23, 0.92); border: 1px solid var(--debt); border-radius: 8px;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45), 0 0 16px rgba(248, 81, 73, 0.25);
-    opacity: 0; transform-origin: 50% 50%;
-  }
-
-  .toast {
-    position: absolute; left: 7%; right: 7%; top: 36%; padding: 14px 16px;
-    background: rgba(13, 17, 23, 0.94); border: 1px solid var(--paid); border-radius: 10px;
-    text-align: center; pointer-events: none;
-    opacity: 0; transform: translateY(-8px) scale(0.97); transition: opacity 0.2s, transform 0.2s;
-  }
-  .toast.show { opacity: 1; transform: none; }
-  .toast .title { font: 800 15px var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--paid); }
-  .toast.tetris .title { font-size: 19px; }
-  .toast.level { border-color: var(--level); }
-  .toast.level .title { color: var(--level); }
-  .toast.interest { border-color: var(--debt); }
-  .toast.interest .title { color: var(--debt); }
-  .toast.hotfix { border-color: var(--hotfix); }
-  .toast.hotfix .title { color: var(--hotfix); }
-  .toast .msg { margin-top: 6px; font-size: 13px; }
 
   .overlay {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
@@ -201,7 +211,7 @@
   @media (max-width: 760px) {
     :root {
       --strip: 84px;
-      --chrome-h: 176px; /* header + stats bar + ticker + gaps */
+      --chrome-h: 186px; /* header + stats bar + ticker + gaps */
       --board-h: clamp(300px, min(calc(100dvh - var(--chrome-h) - var(--controls-h, 0px)), calc((100vw - 40px - var(--strip)) * 2)), 640px);
     }
     .app { min-height: 0; padding: 8px 16px 0; gap: 8px; }
@@ -231,7 +241,6 @@
     /* Tag and message flow together, clamped to four lines so the board never jumps. */
     .ticker { display: block; height: calc(4 * 1.35em); min-height: 0; overflow: hidden; font-size: 11.5px; line-height: 1.35; }
     .ticker .tag { display: inline-block; margin-right: 6px; }
-    .flyer { left: 2px; right: 2px; padding: 6px 8px; font-size: 12px; }
     .pane h2 { font-size: 18px; }
   }
 
@@ -304,10 +313,6 @@
     <div class="board-col" id="board-col">
       <div class="board-wrap" id="board-wrap">
         <canvas id="board" aria-label="Techdebtris board"></canvas>
-        <div class="toast" id="toast" role="status" aria-live="polite">
-          <div class="title" id="toast-title"></div>
-          <div class="msg" id="toast-msg"></div>
-        </div>
         <div class="overlay" id="overlay">
           <div class="pane" id="ov-start">
             <h2>Sprint 0</h2>
@@ -1205,30 +1210,6 @@ Deployed on a Friday. It was fine. Don't make this a habit.
     return Math.max(MIN_GRAVITY_MS, seconds * 1000);
   }
 
-  // Find a vertical spot of height `size` within [min, max] that avoids every `blocked`
-  // [start, end] span. Prefers the space below all blocked spans (nothing will fall there),
-  // then the biggest gap. Returns { top, below } with the card centered in its gap, or null.
-  function findFreeSlot(min, max, size, blocked) {
-    const spans = blocked
-      .map(([a, b]) => [Math.max(min, a), Math.min(max, b)])
-      .filter(([a, b]) => b > a)
-      .sort((p, q) => p[0] - q[0]);
-    const gaps = [];
-    let cursor = min;
-    for (const [a, b] of spans) {
-      if (a > cursor) gaps.push([cursor, a]);
-      cursor = Math.max(cursor, b);
-    }
-    if (cursor < max) gaps.push([cursor, max]);
-
-    const fitting = gaps.filter(([a, b]) => b - a >= size);
-    if (fitting.length === 0) return null;
-    const lowestBlocked = spans.length ? Math.max(...spans.map(([, b]) => b)) : -Infinity;
-    const underneath = fitting.find(([a]) => a >= lowestBlocked);
-    const [a, b] = underneath || fitting.reduce((best, gap) => (gap[1] - gap[0] > best[1] - best[0] ? gap : best));
-    return { top: a + (b - a - size) / 2, below: Boolean(underneath) };
-  }
-
   // Touch controls. Turns one finger's movement into game actions: drag sideways to move a
   // column per cell of travel, drag down to soft-drop a row per cell, flick down to hard-drop,
   // tap or swipe up to rotate. `cell` is the on-screen width of a board column, in px.
@@ -1601,7 +1582,7 @@ Deployed on a Friday. It was fine. Don't make this a habit.
     COLS, ROWS, HIDDEN_ROWS, TOTAL_ROWS, LOCK_DELAY, MAX_LOCK_RESETS, LINES_PER_LEVEL,
     INTEREST_DUE, REFACTOR_POINTS,
     PIECE_TYPES, PIECES, SHAPES,
-    mulberry32, createShuffleBag, parseMessages, createMessenger, gravityInterval, findFreeSlot,
+    mulberry32, createShuffleBag, parseMessages, createMessenger, gravityInterval,
     createGestureTracker, createGame,
   };
 })(typeof window !== 'undefined' ? window : globalThis);
@@ -1625,13 +1606,8 @@ Deployed on a Friday. It was fine. Don't make this a habit.
   const ARR_MS = 45;
   const SOFT_DROP_MS = 40;
   const FLASH_MS = 320;
-  const FLYER_POP_MS = 140;
-  const FLYER_HOLD_MS = 850;
-  const FLYER_LEAVE_MS = 450;
-  const FLYER_DODGE_MS = 70;
-  const FLYER_FAST_GRAVITY_MS = 120;
-  const FLYER_MARGIN_ROWS = 1;
-  const TOAST_MS = 2600;
+  const HIGHLIGHT_MS = 2200;
+  const FX_CLASSES = ['fx-nudge', 'fx-wiggle', 'fx-pop', 'fx-bigpop'];
   const LOG_LIMIT = 80;
   const BEST_KEY = 'techdebtris.best';
   const BUTTONS_KEY = 'techdebtris.buttons';
@@ -1665,9 +1641,6 @@ Deployed on a Friday. It was fine. Don't make this a habit.
     layout: byId('layout'),
     holdPanel: byId('hold-panel'),
     log: byId('log'),
-    toast: byId('toast'),
-    toastTitle: byId('toast-title'),
-    toastMsg: byId('toast-msg'),
     overlay: byId('overlay'),
     panes: { start: byId('ov-start'), pause: byId('ov-pause'), over: byId('ov-over') },
     pauseMsg: byId('pause-msg'),
@@ -1741,15 +1714,46 @@ Deployed on a Friday. It was fine. Don't make this a habit.
     return el;
   }
 
-  function setTicker(kind, tag, text) {
+  let highlightUntil = 0;
+  let highlightTimer = null;
+
+  // Show a message in the ticker. `fx` plays a little animation. A `headline` also lights the
+  // ticker up in the message's color for a couple of seconds, with the headline in the tag;
+  // routine messages that arrive meanwhile wait it out (they still go to the git log).
+  function setTicker(kind, tag, text, { fx = null, headline = null } = {}) {
+    const now = performance.now();
+    if (!headline && now < highlightUntil) return;
+    clearTimeout(highlightTimer);
     els.tickerTag.className = `tag ${kind}`;
-    els.tickerTag.textContent = tag;
+    els.tickerTag.textContent = headline || tag;
     const msg = document.createElement('span');
     msg.className = 'msg';
     renderMessage(msg, text);
     els.tickerMsg.replaceWith(msg);
     msg.id = 'ticker-msg';
     els.tickerMsg = msg;
+
+    els.ticker.style.setProperty('--fx', `var(--${kind === 'fatal' ? 'debt' : kind})`);
+    els.ticker.classList.toggle('highlight', Boolean(headline));
+    els.ticker.classList.remove(...FX_CLASSES);
+    if (fx) {
+      void els.ticker.offsetWidth; // restart the animation
+      els.ticker.classList.add(`fx-${fx}`);
+    }
+    highlightUntil = headline ? now + HIGHLIGHT_MS : 0;
+    if (headline) {
+      highlightTimer = setTimeout(() => {
+        els.ticker.classList.remove('highlight');
+        els.tickerTag.textContent = tag;
+        highlightUntil = 0;
+      }, HIGHLIGHT_MS);
+    }
+  }
+
+  function resetTicker() {
+    clearTimeout(highlightTimer);
+    highlightUntil = 0;
+    els.ticker.classList.remove('highlight', ...FX_CLASSES);
   }
 
   function addLogEntry(kind, tag, text) {
@@ -1768,177 +1772,10 @@ Deployed on a Friday. It was fine. Don't make this a habit.
     els.log.scrollTop = 0;
   }
 
-  // Post a message to the log and the ticker. With `popUp`, the message first pops up on the
-  // board (somewhere away from the action), then drops down into the ticker below it.
-  function announce(kind, tag, text, popUp = false) {
+  // Post a message to the git log and the ticker (see setTicker for `effects`).
+  function announce(kind, tag, text, effects) {
     addLogEntry(kind, tag, text);
-    finishFlyer();
-    if (popUp && !reducedMotion.matches) launchFlyer(kind, tag, text);
-    else setTicker(kind, tag, text);
-  }
-
-  // ---------- flyer: a message that pops up on the board and drops into the ticker ----------
-  //
-  // The flyer never covers what the player is looking at: the falling piece, its landing
-  // shadow, or a line-clear toast. It's placed in the rows between/below those, re-checked
-  // every frame, and it leaves early if the action moves into it. If there's no room on the
-  // board, it pops up in the ticker area just below the board instead.
-
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  let flyer = null;
-
-  function launchFlyer(kind, tag, text) {
-    const el = document.createElement('div');
-    el.className = `flyer ${kind}`;
-    el.style.visibility = 'hidden';
-    const msg = document.createElement('span');
-    renderMessage(msg, text);
-    el.append(makeTag(kind, tag), msg);
-    els.boardCol.append(el);
-    // Placement waits for the first frame: the next piece hasn't spawned yet when a lock is announced.
-    flyer = { el, kind, tag, text, top: null, onBoard: false, age: 0, y: 0, opacity: 0, leaving: null };
-  }
-
-  // Land any in-flight message immediately (a newer message, a pause, or game over is coming).
-  function finishFlyer() {
-    if (!flyer) return;
-    const { el, kind, tag, text } = flyer;
-    flyer = null;
-    el.remove();
-    setTicker(kind, tag, text);
-  }
-
-  // Every row the current piece could land in, at any column and rotation: the stack surface.
-  // Using all of them (not just the current shadow) means sliding or rotating the piece
-  // can't suddenly move its landing shadow on top of the flyer.
-  function landingRows() {
-    let top = Infinity;
-    let bottom = -Infinity;
-    for (let rot = 0; rot < 4; rot++) {
-      for (let x = -3; x < T.COLS; x++) {
-        const probe = { ...game.piece, rot, x };
-        if (!game.fits(probe)) continue;
-        for (const [, y] of game.cells({ ...probe, y: game.ghostY(probe) })) {
-          top = Math.min(top, y);
-          bottom = Math.max(bottom, y);
-        }
-      }
-    }
-    return [top, bottom];
-  }
-
-  // Vertical spans (px, relative to the board column) the flyer must stay out of.
-  function busySpans(m) {
-    const spans = [];
-    const margin = FLYER_MARGIN_ROWS * m.cell;
-    const toPx = (topRow, bottomRow, extraBelow = 0) => [
-      m.top + (topRow - T.HIDDEN_ROWS) * m.cell - margin,
-      m.top + (bottomRow - T.HIDDEN_ROWS + 1 + extraBelow) * m.cell + margin,
-    ];
-    if (game.piece) {
-      const ys = game.cells().map(([, y]) => y);
-      const [landTop, landBottom] = landingRows();
-      // While soft-dropping (or once gravity is very fast) the piece sweeps its whole path.
-      const sweeping = held.soft !== null || T.gravityInterval(game.level) < FLYER_FAST_GRAVITY_MS;
-      // The piece gets an extra row of room below it, since that's the way it's moving.
-      spans.push(toPx(Math.min(...ys), sweeping ? landBottom : Math.max(...ys), 1));
-      spans.push(toPx(landTop, landBottom));
-    }
-    if (els.toast.classList.contains('show')) {
-      const r = els.toast.getBoundingClientRect();
-      spans.push([r.top - m.colTop - 8, r.bottom - m.colTop + 8]);
-    }
-    return spans;
-  }
-
-  function updateFlyer(dt) {
-    const f = flyer;
-    if (!f) return;
-    const colTop = els.boardCol.getBoundingClientRect().top;
-    const canvas = els.board.getBoundingClientRect();
-    const m = { colTop, top: canvas.top - colTop, height: canvas.height, cell: canvas.height / T.ROWS };
-    const tickerTop = els.ticker.getBoundingClientRect().top - colTop;
-    const h = f.el.offsetHeight;
-    const spans = busySpans(m);
-
-    if (f.top === null) {
-      if (!game.piece) return;
-      const slot = T.findFreeSlot(m.top + 4, m.top + m.height - 4, h, spans);
-      f.onBoard = slot !== null;
-      f.top = slot ? slot.top : tickerTop;
-      f.el.style.top = `${f.top}px`;
-      f.el.style.visibility = '';
-    }
-
-    f.age += dt;
-    const y = f.leaving ? f.y : 0;
-    const inTheWay = f.onBoard && spans.some(([a, b]) => a < f.top + y + h && b > f.top + y);
-
-    if (inTheWay && !(f.leaving && f.leaving.dodge)) {
-      // Something moved toward the flyer: fade out quickly right where it is.
-      f.leaving = { age: 0, fromY: y, toY: y, fromOpacity: f.opacity, duration: FLYER_DODGE_MS, dodge: true };
-    } else if (!f.leaving && f.age >= FLYER_HOLD_MS) {
-      // Drop toward the ticker, but only as far as the next busy span below it.
-      const bottom = f.top + h;
-      const nextBusy = Math.min(Infinity, ...spans.map(([a]) => a).filter((a) => a >= bottom - 1));
-      const drop = f.onBoard ? Math.max(0, Math.min(tickerTop - f.top, nextBusy - bottom - 4)) : 0;
-      f.leaving = { age: 0, fromY: 0, toY: drop, fromOpacity: 1, duration: FLYER_LEAVE_MS, dodge: false };
-    }
-
-    let opacity = 1;
-    let scale = 1;
-    f.y = 0;
-    if (f.leaving) {
-      const l = f.leaving;
-      l.age += dt;
-      const p = Math.min(1, l.age / l.duration);
-      const eased = l.dodge ? p : p * p;
-      f.y = l.fromY + (l.toY - l.fromY) * eased;
-      opacity = l.fromOpacity * (1 - eased);
-      scale = 1 - 0.08 * eased;
-      if (p >= 1) {
-        finishFlyer();
-        return;
-      }
-    } else if (f.age < FLYER_POP_MS) {
-      const p = f.age / FLYER_POP_MS;
-      opacity = p;
-      scale = 0.9 + 0.1 * (1 - (1 - p) ** 3);
-    }
-    f.opacity = opacity;
-    f.el.style.opacity = String(opacity);
-    f.el.style.transform = `translateY(${f.y}px) scale(${scale})`;
-  }
-
-  const toastQueue = [];
-  let toastTimer = null;
-
-  function toast(kind, title, text) {
-    if (toastQueue.length >= 2) toastQueue.shift();
-    toastQueue.push({ kind, title, text });
-    if (!toastTimer) showNextToast();
-  }
-
-  function showNextToast() {
-    const next = toastQueue.shift();
-    if (!next) {
-      toastTimer = null;
-      return;
-    }
-    els.toast.className = `toast ${next.kind} show`;
-    els.toastTitle.textContent = next.title;
-    renderMessage(els.toastMsg, next.text);
-    toastTimer = setTimeout(() => {
-      els.toast.classList.remove('show');
-      toastTimer = setTimeout(showNextToast, 250);
-    }, TOAST_MS);
-  }
-
-  function clearToasts() {
-    toastQueue.length = 0;
-    clearTimeout(toastTimer);
-    toastTimer = null;
-    els.toast.classList.remove('show');
+    setTicker(kind, tag, text, effects);
   }
 
   function onEvent(e) {
@@ -1947,47 +1784,43 @@ Deployed on a Friday. It was fine. Don't make this a habit.
         announce('init', 'init', messenger.next('start'));
         break;
       case 'hold':
-        announce('hold', 'backlog', messenger.next('hold'));
+        announce('hold', 'backlog', messenger.next('hold'), { fx: 'nudge' });
         break;
       case 'spawn':
-        if (e.piece === 'H') addLogEntry('hotfix', 'hotfix', HOTFIX_HINT);
+        if (e.piece === 'H') announce('hotfix', 'hotfix', HOTFIX_HINT, { fx: 'pop', headline: 'Hotfix incoming' });
         break;
       case 'lock': {
-        if (e.cleared === 0 && e.gapsFixed === 0) {
-          // Every placement is logged; only burying a gap earns the pop-up on the board.
-          announce('debt', '+debt', messenger.next('placed'), e.gapsCovered > 0);
-          break;
-        }
         if (e.cleared) {
-          const text = messenger.next(CLEAR_POOLS[e.cleared]);
-          announce('paid', e.cleared > 1 ? `−debt ×${e.cleared}` : '−debt', text);
-          toast(e.cleared === 4 ? 'tetris' : 'paid', CLEAR_TITLES[e.cleared], text);
           flashes.push({ rows: e.rows, t: performance.now() });
           if (e.cleared === 4) pulse('celebrate');
         }
         if (e.gapsFixed) {
+          // A refactor (or hotfix) is the more specific story, so its message wins over the clear's.
           const hotfix = e.piece === 'H';
-          const text = messenger.next(hotfix ? 'hotfix' : 'refactor');
+          const bonus = `${hotfix ? 'Hotfix' : 'Refactor'} +${e.refactorPoints}`;
+          const headline = e.cleared ? `${CLEAR_TITLES[e.cleared]} · ${bonus}` : bonus;
           const times = e.gapsFixed > 1 ? ` ×${e.gapsFixed}` : '';
-          announce(hotfix ? 'hotfix' : 'paid', `${hotfix ? 'hotfix' : 'refactor'}${times}`, text);
-          toast(hotfix ? 'hotfix' : 'paid', `${hotfix ? 'Hotfix deployed' : 'Refactor'} +${e.refactorPoints}`, text);
+          announce(hotfix ? 'hotfix' : 'paid', `${hotfix ? 'hotfix' : 'refactor'}${times}`,
+            messenger.next(hotfix ? 'hotfix' : 'refactor'), { fx: e.cleared === 4 ? 'bigpop' : 'pop', headline });
+        } else if (e.cleared) {
+          announce('paid', e.cleared > 1 ? `−debt ×${e.cleared}` : '−debt', messenger.next(CLEAR_POOLS[e.cleared]),
+            { fx: e.cleared === 4 ? 'bigpop' : 'pop', headline: CLEAR_TITLES[e.cleared] });
+        } else if (e.gapsCovered) {
+          const headline = e.gapsCovered > 1 ? `${e.gapsCovered} gaps buried` : 'Gap buried';
+          announce('debt', '+debt', messenger.next('placed'), { fx: 'wiggle', headline });
+        } else {
+          announce('debt', '+debt', messenger.next('placed'), { fx: 'nudge' });
         }
         break;
       }
-      case 'interest': {
-        const text = messenger.next('interest');
-        announce('debt', 'interest', text);
-        toast('interest', 'Interest due', text);
+      case 'interest':
+        announce('debt', 'interest', messenger.next('interest'), { fx: 'wiggle', headline: 'Interest due' });
         flashes.push({ rows: [T.TOTAL_ROWS - 1], t: performance.now(), rgb: '248, 81, 73' });
         pulse('shake');
         break;
-      }
-      case 'levelUp': {
-        const text = messenger.next('levelUp');
-        announce('level', `sprint ${e.level}`, text);
-        toast('level', `Sprint ${e.level}`, text);
+      case 'levelUp':
+        announce('level', `sprint ${e.level}`, messenger.next('levelUp'), { fx: 'pop', headline: `Sprint ${e.level}` });
         break;
-      }
       case 'gameOver':
         showGameOver();
         break;
@@ -2009,7 +1842,7 @@ Deployed on a Friday. It was fine. Don't make this a habit.
 
   function startGame() {
     clearHeld();
-    clearToasts();
+    resetTicker();
     flashes = [];
     els.log.textContent = '';
     showOverlay(null);
@@ -2020,7 +1853,6 @@ Deployed on a Friday. It was fine. Don't make this a habit.
     if (!game.started || game.over || game.paused) return;
     game.pause();
     clearHeld();
-    finishFlyer();
     renderMessage(els.pauseMsg, messenger.next('pause'));
     showOverlay('pause');
   }
@@ -2034,7 +1866,7 @@ Deployed on a Friday. It was fine. Don't make this a habit.
   function showGameOver() {
     clearHeld();
     const text = messenger.next('gameOver');
-    announce('fatal', 'FATAL', text);
+    announce('fatal', 'FATAL', text, { fx: 'wiggle', headline: 'Technical bankruptcy' });
     renderMessage(els.overMsg, text);
     els.overScore.textContent = game.score.toLocaleString();
     els.overLines.textContent = game.lines;
@@ -2419,7 +2251,6 @@ Deployed on a Friday. It was fine. Don't make this a habit.
     renderPreview(els.hold, [game.holdType], game.started && !game.canHold);
     renderPreview(els.next, game.queue.slice(0, 3), false);
     renderStats();
-    updateFlyer(dt);
     requestAnimationFrame(frame);
   }
 

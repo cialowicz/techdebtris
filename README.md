@@ -96,11 +96,12 @@ There are ~630 messages, split into pools:
 | `pause`    | The game is paused        | 10    |
 | `gameOver` | You top out               | 20    |
 
-Every debt-taken message goes to the commit log and the ticker below the board. When a piece buries
-an empty gap beneath it, the message also pops up on the board in rows the action isn't using. It
-stays clear of the falling piece, every row it could land in, and any line-clear message, then drops
-into the ticker below the board. If the action moves toward a message, it fades out of the way. When
-the board has no room, the message pops up in the ticker area instead.
+Messages never cover the board. Every one goes to the git log and to the ticker below the board,
+which reacts to what happened: a quick wiggle for routine debt, and for the big moments (burying a
+gap, paying debt down, a refactor, a hotfix, interest coming due, a new sprint) it lights up in the
+event's color with a headline like **DEBT PAID** or **GAP BURIED**. A Tetris gets an extra bounce.
+Routine messages that arrive while the ticker is lit up wait their turn (they still land in the
+git log).
 
 Each pool is dealt from a shuffled "bag", so every message in a pool is shown once before any repeats,
 and the same message never appears twice in a row.
