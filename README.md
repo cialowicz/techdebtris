@@ -7,6 +7,20 @@ Tetris, but every piece you place is a shortcut and every line you clear pays so
 It's a single, self-contained HTML file with no dependencies, no build step, and no network requests.
 Open `techdebtris.html` in any modern browser and start your first sprint.
 
+## Gameplay
+
+#### Accumulate and pay down technical debt
+
+<img alt="Accumulate and Pay Down Tech Debt" src="screenshots/Techdebtris-debt.png" width="700">
+
+#### Hotfixes help you close the gap
+
+<img alt="Hotfixes Help" src="screenshots/Techdebtris-hotfix.png" width="700">
+
+#### Every codebase has a limited shelf-life
+
+<img alt="Endgame Stats" src="screenshots/Techdebtris-endgame.png" width="700">
+
 ## How it plays
 
 It's standard modern Tetris: a 10×20 well, 7-bag randomizer, Super Rotation System wall kicks,
